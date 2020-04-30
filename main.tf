@@ -17,7 +17,7 @@
 # AWS provider configuration
 # version constraints defined in versions.tf
 provider "aws" {
-  region  = var.region
+  region = var.region
 }
 
 # --- Buckets's IAM ---
@@ -28,7 +28,7 @@ resource "aws_iam_user" "quortex" {
   name  = "${var.storage_prefix}-storage"
   path  = var.sa_path
 
-  tags  = var.tags
+  tags = var.tags
 }
 
 # Key
@@ -75,7 +75,7 @@ EOF
 
 # The S3 buckets.
 resource "aws_s3_bucket" "quortex" {
-  for_each      = var.buckets
+  for_each = var.buckets
 
   bucket        = "${var.storage_prefix}-${each.value}"
   acl           = "private"
