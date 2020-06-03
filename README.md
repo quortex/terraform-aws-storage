@@ -50,8 +50,6 @@ Check out these related projects.
 
 - [terraform-aws-eks-load-balancer][registry_tf_aws-eks_load_balancer] - A terraform module for Quortex infrastructure AWS load balancing layer.
 
-- [terraform-aws-storage][registry_tf_aws-eks_storage] - A terraform module for Quortex infrastructure AWS persistent storage layer.
-
 ## Help
 
 **Got a question?**
