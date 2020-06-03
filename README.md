@@ -8,7 +8,7 @@ It provides a set of resources necessary to provision the bucket and access key 
 
 ![infra_diagram]
 
-This module is available on [Terraform Registry][registry_tf_aws-eks_cluster].
+This module is available on [Terraform Registry][registry_tf_aws-eks_storage].
 
 Get all our terraform modules on [Terraform Registry][registry_tf_modules] or on [Github][github_tf_modules] !
 
@@ -24,7 +24,7 @@ This module creates the following resources in AWS:
 
 ```
 module "storage" {
-  source = "git::https://github.com/quortex/terraform-aws-storage.git"
+  source = "quortex/storage/aws"
   
   region         = "eu-west-3"
 
@@ -56,7 +56,7 @@ Check out these related projects.
 
 **Got a question?**
 
-File a GitHub [issue](https://github.com/quortex/terraform-aws-eks-storage/issues) or send us an [email][email].
+File a GitHub [issue](https://github.com/quortex/terraform-aws-storage/issues) or send us an [email][email].
 
 
   [logo]: https://storage.googleapis.com/quortex-assets/logo.webp
@@ -65,8 +65,8 @@ File a GitHub [issue](https://github.com/quortex/terraform-aws-eks-storage/issue
   [email]: mailto:info@quortex.io
 
   [registry_tf_modules]: https://registry.terraform.io/modules/quortex
-  [registry_tf_aws-eks_network]: https://registry.terraform.io/modules/quortex/network/aws-eks
-  [registry_tf_aws-eks_cluster]: https://registry.terraform.io/modules/quortex/eks-cluster/aws-eks
-  [registry_tf_aws-eks_load_balancer]: https://registry.terraform.io/modules/quortex/load-balancer/aws-eks
-  [registry_tf_aws-eks_storage]: https://registry.terraform.io/modules/quortex/storage/aws-eks
+  [registry_tf_aws-eks_network]: https://registry.terraform.io/modules/quortex/network/aws
+  [registry_tf_aws-eks_cluster]: https://registry.terraform.io/modules/quortex/eks-cluster/aws
+  [registry_tf_aws-eks_load_balancer]: https://registry.terraform.io/modules/quortex/load-balancer/aws
+  [registry_tf_aws-eks_storage]: https://registry.terraform.io/modules/quortex/storage/aws
   [github_tf_modules]: https://github.com/quortex?q=terraform-
