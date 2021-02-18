@@ -81,5 +81,14 @@ resource "aws_s3_bucket" "quortex" {
   acl           = "private"
   force_destroy = var.force_destroy
   tags          = var.tags
-}
 
+  # Empty bucket content before destroy to improves the bucket destruction time
+  provisioner "local-exec" {
+    when    = destroy
+    command = <<EOT
+      ${!self.force_destroy} && exit
+      echo 'emptying ${self.bucket} bucket'
+      aws s3 rm s3://${self.bucket} --recursive --quiet
+    EOT
+  }
+}

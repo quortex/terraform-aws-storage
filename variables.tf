@@ -44,7 +44,7 @@ variable "sa_path" {
 }
 
 variable "tags" {
-  type        = map
+  type        = map(any)
   description = "Tags to apply to resources. A list of key->value pairs."
   default     = {}
 }
