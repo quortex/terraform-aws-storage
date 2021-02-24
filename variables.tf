@@ -14,11 +14,6 @@
  * limitations under the License.
  */
 
-variable "region" {
-  type        = string
-  description = "The region in wich to create buckets."
-}
-
 variable "buckets" {
   type        = set(string)
   default     = []
