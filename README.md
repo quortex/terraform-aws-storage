@@ -26,8 +26,6 @@ This module creates the following resources in AWS:
 module "storage" {
   source = "quortex/storage/aws"
   
-  region         = "eu-west-3"
-
   buckets        =  ["storage1", "storage2"]
   storage_prefix = "prf"
   force_destroy  = true
