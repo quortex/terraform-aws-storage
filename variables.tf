@@ -32,6 +32,12 @@ variable "force_destroy" {
   description = "When deleting a bucket, this boolean option will delete all contained objects. If you try to delete a bucket that contains objects, Terraform will fail that run."
 }
 
+variable "expiration" {
+  type        = object({ enabled = bool, expiration_days = number })
+  description = "Lifecycle rule configuration for bucket objects expiration."
+  default     = null
+}
+
 variable "sa_path" {
   type        = string
   default     = "/system/"
