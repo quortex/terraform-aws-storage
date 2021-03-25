@@ -74,7 +74,18 @@ resource "aws_s3_bucket" "quortex" {
   bucket        = "${var.storage_prefix}-${each.value}"
   acl           = "private"
   force_destroy = var.force_destroy
-  tags          = var.tags
+
+  dynamic "lifecycle_rule" {
+    for_each = var.expiration != null ? [true] : []
+    content {
+      enabled = var.expiration.enabled
+      expiration {
+        days = var.expiration.expiration_days
+      }
+    }
+  }
+
+  tags = var.tags
 
   # Empty bucket content before destroy to improves the bucket destruction time
   provisioner "local-exec" {
