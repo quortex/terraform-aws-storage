@@ -91,7 +91,7 @@ resource "aws_s3_bucket" "quortex" {
   provisioner "local-exec" {
     when    = destroy
     command = <<EOT
-      ${!self.force_destroy} && exit
+      ${self.force_destroy} || exit
       echo 'emptying ${self.bucket} bucket'
       aws s3 rm s3://${self.bucket} --recursive --quiet
     EOT
