@@ -15,8 +15,8 @@
  */
 
 output "buckets" {
-  value       = { for k, v in aws_s3_bucket.quortex : k => v.bucket }
-  description = "A map of bucket names for each bucket provided in variables."
+  value       = { for k, v in aws_s3_bucket.quortex : k => { "name" : v.bucket, "arn" : v.arn, "regional_domain_name" : v.bucket_regional_domain_name } }
+  description = "A map of bucket informations for each bucket provided in variables."
 }
 
 # The key ID to use for buckets access.
