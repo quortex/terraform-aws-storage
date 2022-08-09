@@ -97,3 +97,33 @@ resource "aws_s3_bucket" "quortex" {
     EOT
   }
 }
+
+# Origin access identity to allow acces from cloudfront
+resource "aws_cloudfront_origin_access_identity" "quortex" {
+  for_each = var.buckets
+
+  comment = "Access identity for bucket ${aws_s3_bucket.quortex[each.value].bucket} access"
+}
+
+# Bucket access policy 
+data "aws_iam_policy_document" "quortex" {
+  for_each = var.buckets
+
+  statement {
+    actions   = ["s3:GetObject"]
+    resources = ["${aws_s3_bucket.quortex[each.value].arn}/*"]
+
+    principals {
+      type        = "AWS"
+      identifiers = [aws_cloudfront_origin_access_identity.quortex[each.value].iam_arn]
+    }
+  }
+}
+
+# Apply bucket policy
+resource "aws_s3_bucket_policy" "quortex" {
+  for_each = var.buckets
+
+  bucket = aws_s3_bucket.quortex[each.value].id
+  policy = data.aws_iam_policy_document.quortex[each.value].json
+}
