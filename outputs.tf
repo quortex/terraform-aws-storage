@@ -15,7 +15,7 @@
  */
 
 output "buckets" {
-  value       = { for k, v in aws_s3_bucket.quortex : k => { "name" : v.bucket, "arn" : v.arn, "regional_domain_name" : v.bucket_regional_domain_name } }
+  value       = { for k, v in aws_s3_bucket.quortex : k => { "name" : v.bucket, "arn" : v.arn, "regional_domain_name" : v.bucket_regional_domain_name, "access_identity_path" : aws_cloudfront_origin_access_identity.quortex[k].cloudfront_access_identity_path, } }
   description = "A map of bucket informations for each bucket provided in variables."
 }
 
