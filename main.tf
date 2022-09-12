@@ -98,6 +98,15 @@ resource "aws_s3_bucket" "quortex" {
   }
 }
 
+resource "aws_s3_bucket_public_access_block" "quortex" {
+  bucket = aws_s3_bucket.quortex.id
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 # Origin access identity to allow acces from cloudfront
 resource "aws_cloudfront_origin_access_identity" "quortex" {
   for_each = var.buckets
@@ -105,7 +114,7 @@ resource "aws_cloudfront_origin_access_identity" "quortex" {
   comment = "Access identity for bucket ${aws_s3_bucket.quortex[each.value].bucket} access"
 }
 
-# Bucket access policy 
+# Bucket access policy
 data "aws_iam_policy_document" "quortex" {
   for_each = var.buckets
 
