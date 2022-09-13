@@ -98,6 +98,18 @@ resource "aws_s3_bucket" "quortex" {
   }
 }
 
+# Set minimal encryption on buckets
+resource "aws_s3_bucket_server_side_encryption_configuration" "access_logs" {
+  for_each = var.enable_bucket_encryption ? var.buckets : toset([])
+  bucket   = aws_s3_bucket.quortex[each.value].id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
 resource "aws_s3_bucket_public_access_block" "quortex" {
   for_each = var.buckets
   bucket   = aws_s3_bucket.quortex[each.value].id

@@ -38,6 +38,12 @@ variable "expiration" {
   default     = null
 }
 
+variable "enable_bucket_encryption" {
+  type        = bool
+  description = "Should the created bucket encrypted using SSE-S3."
+  default     = true
+}
+
 variable "sa_path" {
   type        = string
   default     = "/system/"
