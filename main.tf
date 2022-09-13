@@ -99,7 +99,8 @@ resource "aws_s3_bucket" "quortex" {
 }
 
 resource "aws_s3_bucket_public_access_block" "quortex" {
-  bucket = aws_s3_bucket.quortex.id
+  for_each = var.buckets
+  bucket   = aws_s3_bucket.quortex[each.value].id
 
   block_public_acls       = true
   block_public_policy     = true
