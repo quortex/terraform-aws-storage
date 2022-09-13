@@ -95,7 +95,7 @@ resource "aws_s3_bucket_acl" "quortex" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "quortex" {
-  for_each = var.expiration != null ? var.buckets : toset([])
+  for_each = var.expiration != null && var.expiration.enabled ? var.buckets : toset([])
 
   bucket = aws_s3_bucket.quortex[each.value].id
   rule {
