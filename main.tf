@@ -72,18 +72,7 @@ resource "aws_s3_bucket" "quortex" {
   for_each = var.buckets
 
   bucket        = "${var.storage_prefix}-${each.value}"
-  acl           = "private"
   force_destroy = var.force_destroy
-
-  dynamic "lifecycle_rule" {
-    for_each = var.expiration != null ? [true] : []
-    content {
-      enabled = var.expiration.enabled
-      expiration {
-        days = var.expiration.expiration_days
-      }
-    }
-  }
 
   tags = var.tags
 
@@ -98,8 +87,28 @@ resource "aws_s3_bucket" "quortex" {
   }
 }
 
+resource "aws_s3_bucket_acl" "quortex" {
+  for_each = var.buckets
+
+  bucket = aws_s3_bucket.quortex[each.value].id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "quortex" {
+  for_each = var.expiration != null ? var.buckets : []
+
+  bucket = aws_s3_bucket.quortex[each.value].id
+  rule {
+    id     = "expiration"
+    status = "Enabled"
+    expiration {
+      days = var.expiration.expiration_days
+    }
+  }
+}
+
 # Set minimal encryption on buckets
-resource "aws_s3_bucket_server_side_encryption_configuration" "access_logs" {
+resource "aws_s3_bucket_server_side_encryption_configuration" "quortex" {
   for_each = var.enable_bucket_encryption ? var.buckets : toset([])
   bucket   = aws_s3_bucket.quortex[each.value].id
 
