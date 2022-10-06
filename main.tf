@@ -18,20 +18,24 @@
 
 # Service account
 resource "aws_iam_user" "quortex" {
-  count = length(var.buckets) > 0 ? 1 : 0
+  count = length(local.buckets) > 0 ? 1 : 0
   name  = "${var.storage_prefix}-storage"
   path  = var.sa_path
 
   tags = var.tags
 }
 
+locals {
+  buckets = toset([for b in var.buckets : b["name"]])
+}
+
 # Key
 resource "aws_iam_access_key" "quortex" {
-  count = length(var.buckets) > 0 ? 1 : 0
+  count = length(local.buckets) > 0 ? 1 : 0
   user  = aws_iam_user.quortex[count.index].name
 }
 resource "aws_iam_user_policy" "quortex_bucket_rw" {
-  for_each = var.buckets
+  for_each = local.buckets
   name     = "${var.storage_prefix}-${each.value}-rw"
   user     = aws_iam_user.quortex[0].name
 
@@ -69,7 +73,7 @@ EOF
 
 # The S3 buckets.
 resource "aws_s3_bucket" "quortex" {
-  for_each = var.buckets
+  for_each = local.buckets
 
   bucket        = "${var.storage_prefix}-${each.value}"
   force_destroy = var.force_destroy
@@ -88,14 +92,14 @@ resource "aws_s3_bucket" "quortex" {
 }
 
 resource "aws_s3_bucket_acl" "quortex" {
-  for_each = var.buckets
+  for_each = local.buckets
 
   bucket = aws_s3_bucket.quortex[each.value].id
   acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "quortex" {
-  for_each = var.expiration != null && var.expiration.enabled ? var.buckets : toset([])
+  for_each = var.expiration != null && var.expiration.enabled ? local.buckets : toset([])
 
   bucket = aws_s3_bucket.quortex[each.value].id
   rule {
@@ -109,7 +113,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "quortex" {
 
 # Set minimal encryption on buckets
 resource "aws_s3_bucket_server_side_encryption_configuration" "quortex" {
-  for_each = var.enable_bucket_encryption ? var.buckets : toset([])
+  for_each = var.enable_bucket_encryption ? local.buckets : toset([])
   bucket   = aws_s3_bucket.quortex[each.value].id
 
   rule {
@@ -120,7 +124,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "quortex" {
 }
 
 resource "aws_s3_bucket_public_access_block" "quortex" {
-  for_each = var.buckets
+  for_each = local.buckets
   bucket   = aws_s3_bucket.quortex[each.value].id
 
   block_public_acls       = true
@@ -131,14 +135,14 @@ resource "aws_s3_bucket_public_access_block" "quortex" {
 
 # Origin access identity to allow acces from cloudfront
 resource "aws_cloudfront_origin_access_identity" "quortex" {
-  for_each = var.buckets
+  for_each = local.buckets
 
   comment = "Access identity for bucket ${aws_s3_bucket.quortex[each.value].bucket} access"
 }
 
 # Bucket access policy
 data "aws_iam_policy_document" "quortex" {
-  for_each = var.buckets
+  for_each = local.buckets
 
   statement {
     actions   = ["s3:GetObject"]
@@ -153,7 +157,7 @@ data "aws_iam_policy_document" "quortex" {
 
 # Apply bucket policy
 resource "aws_s3_bucket_policy" "quortex" {
-  for_each = var.buckets
+  for_each = local.buckets
 
   bucket = aws_s3_bucket.quortex[each.value].id
   policy = data.aws_iam_policy_document.quortex[each.value].json

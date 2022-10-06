@@ -15,7 +15,14 @@
  */
 
 output "buckets" {
-  value       = { for k, v in aws_s3_bucket.quortex : k => { "name" : v.bucket, "arn" : v.arn, "regional_domain_name" : v.bucket_regional_domain_name, "access_identity_path" : aws_cloudfront_origin_access_identity.quortex[k].cloudfront_access_identity_path, "region": v.region, } }
+  value = { for b in var.buckets : b["name"] => {
+    "name" : aws_s3_bucket.quortex[b["name"]].bucket,
+    "arn" : aws_s3_bucket.quortex[b["name"]].arn,
+    "regional_domain_name" : aws_s3_bucket.quortex[b["name"]].bucket_regional_domain_name,
+    "access_identity_path" : aws_cloudfront_origin_access_identity.quortex[b["name"]].cloudfront_access_identity_path,
+    "region" : aws_s3_bucket.quortex[b["name"]].region,
+    "label" : b["label"]
+  } }
   description = "A map of bucket informations for each bucket provided in variables."
 }
 
@@ -31,4 +38,3 @@ output "access_key_secret" {
   description = "The key secret to use for buckets access."
   sensitive   = true
 }
-
