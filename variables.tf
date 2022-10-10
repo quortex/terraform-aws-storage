@@ -15,7 +15,7 @@
  */
 
 variable "buckets" {
-  type        = set(string)
+  type        = set(object({ name = string, label = string }))
   default     = []
   description = "The list of buckets to create."
 }
