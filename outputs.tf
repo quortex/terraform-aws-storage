@@ -19,7 +19,7 @@ output "buckets" {
     "name" : aws_s3_bucket.quortex[b["name"]].bucket,
     "arn" : aws_s3_bucket.quortex[b["name"]].arn,
     "regional_domain_name" : aws_s3_bucket.quortex[b["name"]].bucket_regional_domain_name,
-    "access_identity_path" : aws_cloudfront_origin_access_identity.quortex[b["name"]].cloudfront_access_identity_path,
+    "access_identity_path" : try(aws_cloudfront_origin_access_identity.quortex[b["name"]].cloudfront_access_identity_path, null),
     "region" : aws_s3_bucket.quortex[b["name"]].region,
     "label" : b["label"]
   } }
