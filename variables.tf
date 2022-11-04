@@ -44,6 +44,12 @@ variable "enable_bucket_encryption" {
   default     = true
 }
 
+variable "enable_cloudfront_oia" {
+  type        = bool
+  default     = false
+  description = "Wether to enable cloudfront origin access identity for buckets."
+}
+
 variable "sa_path" {
   type        = string
   default     = "/system/"
