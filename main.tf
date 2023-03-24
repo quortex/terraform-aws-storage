@@ -26,7 +26,9 @@ resource "aws_iam_user" "quortex" {
 }
 
 locals {
-  buckets = toset([for b in var.buckets : b["name"]])
+  buckets = {
+    for b in var.buckets : b["name"] => b["tags"]
+  }
 }
 
 # Key
@@ -36,7 +38,7 @@ resource "aws_iam_access_key" "quortex" {
 }
 resource "aws_iam_user_policy" "quortex_bucket_rw" {
   for_each = local.buckets
-  name     = "${var.storage_prefix}-${each.value}-rw"
+  name     = "${var.storage_prefix}-${each.key}-rw"
   user     = aws_iam_user.quortex[0].name
 
   policy = <<EOF
@@ -50,7 +52,7 @@ resource "aws_iam_user_policy" "quortex_bucket_rw" {
       ],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.quortex[each.value].arn}"
+        "${aws_s3_bucket.quortex[each.key].arn}"
       ]
     },
     {
@@ -60,7 +62,7 @@ resource "aws_iam_user_policy" "quortex_bucket_rw" {
       ],
       "Effect": "Allow",
       "Resource": [
-        "${aws_s3_bucket.quortex[each.value].arn}/*"
+        "${aws_s3_bucket.quortex[each.key].arn}/*"
       ]
     }
   ]
@@ -75,10 +77,13 @@ EOF
 resource "aws_s3_bucket" "quortex" {
   for_each = local.buckets
 
-  bucket        = "${var.storage_prefix}-${each.value}"
+  bucket        = "${var.storage_prefix}-${each.key}"
   force_destroy = var.force_destroy
 
-  tags = var.tags
+  tags = merge(
+    each.value,
+    var.tags
+  )
 
   # Empty bucket content before destroy to improves the bucket destruction time
   provisioner "local-exec" {
@@ -94,14 +99,14 @@ resource "aws_s3_bucket" "quortex" {
 resource "aws_s3_bucket_acl" "quortex" {
   for_each = local.buckets
 
-  bucket = aws_s3_bucket.quortex[each.value].id
+  bucket = aws_s3_bucket.quortex[each.key].id
   acl    = "private"
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "quortex" {
-  for_each = var.expiration != null && var.expiration.enabled ? local.buckets : toset([])
+  for_each = var.expiration != null && var.expiration.enabled ? local.buckets : {}
 
-  bucket = aws_s3_bucket.quortex[each.value].id
+  bucket = aws_s3_bucket.quortex[each.key].id
   rule {
     id     = "expiration"
     status = "Enabled"
@@ -113,8 +118,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "quortex" {
 
 # Set minimal encryption on buckets
 resource "aws_s3_bucket_server_side_encryption_configuration" "quortex" {
-  for_each = var.enable_bucket_encryption ? local.buckets : toset([])
-  bucket   = aws_s3_bucket.quortex[each.value].id
+  for_each = var.enable_bucket_encryption ? local.buckets : {}
+  bucket   = aws_s3_bucket.quortex[each.key].id
 
   rule {
     apply_server_side_encryption_by_default {
@@ -125,7 +130,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "quortex" {
 
 resource "aws_s3_bucket_public_access_block" "quortex" {
   for_each = local.buckets
-  bucket   = aws_s3_bucket.quortex[each.value].id
+  bucket   = aws_s3_bucket.quortex[each.key].id
 
   block_public_acls       = true
   block_public_policy     = true
@@ -135,30 +140,30 @@ resource "aws_s3_bucket_public_access_block" "quortex" {
 
 # Origin access identity to allow acces from cloudfront
 resource "aws_cloudfront_origin_access_identity" "quortex" {
-  for_each = var.enable_cloudfront_oia ? local.buckets : []
+  for_each = var.enable_cloudfront_oia ? local.buckets : {}
 
-  comment = "Access identity for bucket ${aws_s3_bucket.quortex[each.value].bucket} access"
+  comment = "Access identity for bucket ${aws_s3_bucket.quortex[each.key].bucket} access"
 }
 
 # Bucket access policy
 data "aws_iam_policy_document" "quortex" {
-  for_each = var.enable_cloudfront_oia ? local.buckets : []
+  for_each = var.enable_cloudfront_oia ? local.buckets : {}
 
   statement {
     actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.quortex[each.value].arn}/*"]
+    resources = ["${aws_s3_bucket.quortex[each.key].arn}/*"]
 
     principals {
       type        = "AWS"
-      identifiers = [aws_cloudfront_origin_access_identity.quortex[each.value].iam_arn]
+      identifiers = [aws_cloudfront_origin_access_identity.quortex[each.key].iam_arn]
     }
   }
 }
 
 # Apply bucket policy
 resource "aws_s3_bucket_policy" "quortex" {
-  for_each = var.enable_cloudfront_oia ? local.buckets : []
+  for_each = var.enable_cloudfront_oia ? local.buckets : {}
 
-  bucket = aws_s3_bucket.quortex[each.value].id
-  policy = data.aws_iam_policy_document.quortex[each.value].json
+  bucket = aws_s3_bucket.quortex[each.key].id
+  policy = data.aws_iam_policy_document.quortex[each.key].json
 }
