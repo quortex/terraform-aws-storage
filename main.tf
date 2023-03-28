@@ -81,8 +81,8 @@ resource "aws_s3_bucket" "quortex" {
   force_destroy = var.force_destroy
 
   tags = merge(
-    each.value,
-    var.tags
+    var.tags,
+    each.value
   )
 
   # Empty bucket content before destroy to improves the bucket destruction time
