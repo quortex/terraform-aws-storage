@@ -15,7 +15,17 @@
  */
 
 variable "buckets" {
-  type        = set(object({ name = string, label = string, tags = map(string) }))
+  type = set(
+    object({
+      name  = string
+      label = string
+      tags  = map(string)
+      expiration = optional(object({
+        enabled         = bool
+        expiration_days = number
+      }))
+    })
+  )
   default     = []
   description = "The list of buckets to create."
 }
@@ -30,12 +40,6 @@ variable "force_destroy" {
   type        = bool
   default     = false
   description = "When deleting a bucket, this boolean option will delete all contained objects. If you try to delete a bucket that contains objects, Terraform will fail that run."
-}
-
-variable "expiration" {
-  type        = object({ enabled = bool, expiration_days = number })
-  description = "Lifecycle rule configuration for bucket objects expiration."
-  default     = null
 }
 
 variable "enable_bucket_encryption" {

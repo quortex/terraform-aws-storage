@@ -27,7 +27,7 @@ resource "aws_iam_user" "quortex" {
 
 locals {
   buckets = {
-    for b in var.buckets : b["name"] => b["tags"]
+    for b in var.buckets : b["name"] => b
   }
 }
 
@@ -36,6 +36,7 @@ resource "aws_iam_access_key" "quortex" {
   count = length(local.buckets) > 0 ? 1 : 0
   user  = aws_iam_user.quortex[count.index].name
 }
+
 resource "aws_iam_user_policy" "quortex_bucket_rw" {
   for_each = local.buckets
   name     = "${var.storage_prefix}-${each.key}-rw"
@@ -82,7 +83,7 @@ resource "aws_s3_bucket" "quortex" {
 
   tags = merge(
     var.tags,
-    each.value
+    each.value.tags
   )
 
   # Empty bucket content before destroy to improves the bucket destruction time
@@ -104,14 +105,14 @@ resource "aws_s3_bucket_acl" "quortex" {
 }
 
 resource "aws_s3_bucket_lifecycle_configuration" "quortex" {
-  for_each = var.expiration != null && var.expiration.enabled ? local.buckets : {}
+  for_each = { for k, v in local.buckets : k => v if try(v.expiration.enabled, false) }
 
   bucket = aws_s3_bucket.quortex[each.key].id
   rule {
     id     = "expiration"
     status = "Enabled"
     expiration {
-      days = var.expiration.expiration_days
+      days = each.value.expiration.expiration_days
     }
   }
 }

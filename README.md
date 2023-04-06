@@ -38,10 +38,9 @@ This module creates the following resources in AWS:
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_buckets"></a> [buckets](#input\_buckets) | The list of buckets to create. | `set(object({ name = string, label = string, tags = map(string) }))` | `[]` | no |
+| <a name="input_buckets"></a> [buckets](#input\_buckets) | The list of buckets to create. | <pre>set(<br>    object({<br>      name  = string<br>      label = string<br>      tags  = map(string)<br>      expiration = optional(object({<br>        enabled         = bool<br>        expiration_days = number<br>      }))<br>    })<br>  )</pre> | `[]` | no |
 | <a name="input_storage_prefix"></a> [storage\_prefix](#input\_storage\_prefix) | A prefix for bucket names and service account id. Bucket names will be computed from this prefix and the provided buckets variable. | `string` | `"quortex"` | no |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | When deleting a bucket, this boolean option will delete all contained objects. If you try to delete a bucket that contains objects, Terraform will fail that run. | `bool` | `false` | no |
-| <a name="input_expiration"></a> [expiration](#input\_expiration) | Lifecycle rule configuration for bucket objects expiration. | `object({ enabled = bool, expiration_days = number })` | `null` | no |
 | <a name="input_enable_bucket_encryption"></a> [enable\_bucket\_encryption](#input\_enable\_bucket\_encryption) | Should the created bucket encrypted using SSE-S3. | `bool` | `true` | no |
 | <a name="input_enable_cloudfront_oia"></a> [enable\_cloudfront\_oia](#input\_enable\_cloudfront\_oia) | Wether to enable cloudfront origin access identity for buckets. | `bool` | `false` | no |
 | <a name="input_sa_path"></a> [sa\_path](#input\_sa\_path) | The path to assign to bucket's service account. | `string` | `"/system/"` | no |
