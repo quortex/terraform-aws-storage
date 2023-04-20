@@ -28,12 +28,6 @@ This module creates the following resources in AWS:
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.12 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
 
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 4.63.0 |
-
 ## Inputs
 
 | Name | Description | Type | Default | Required |
