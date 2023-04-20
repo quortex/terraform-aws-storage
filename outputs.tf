@@ -16,11 +16,11 @@
 
 output "buckets" {
   value = { for b in var.buckets : b["name"] => {
-    "name" : aws_s3_bucket.quortex[b["name"]].bucket,
-    "arn" : aws_s3_bucket.quortex[b["name"]].arn,
-    "regional_domain_name" : aws_s3_bucket.quortex[b["name"]].bucket_regional_domain_name,
+    "name" : try(aws_s3_bucket.quortex[b["name"]].bucket, null),
+    "arn" : try(aws_s3_bucket.quortex[b["name"]].arn, null),
+    "regional_domain_name" : try(aws_s3_bucket.quortex[b["name"]].bucket_regional_domain_name, null),
     "access_identity_path" : try(aws_cloudfront_origin_access_identity.quortex[b["name"]].cloudfront_access_identity_path, null),
-    "region" : aws_s3_bucket.quortex[b["name"]].region,
+    "region" : try(aws_s3_bucket.quortex[b["name"]].region, null),
     "label" : b["label"]
   } }
   description = "A map of bucket informations for each bucket provided in variables."
