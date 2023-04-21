@@ -97,13 +97,6 @@ resource "aws_s3_bucket" "quortex" {
   }
 }
 
-resource "aws_s3_bucket_acl" "quortex" {
-  for_each = local.buckets
-
-  bucket = aws_s3_bucket.quortex[each.key].id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket_lifecycle_configuration" "quortex" {
   for_each = { for k, v in local.buckets : k => v if try(v.expiration.enabled, false) }
 
