@@ -22,6 +22,7 @@ output "buckets" {
     "access_identity_path" : try(aws_cloudfront_origin_access_identity.quortex[b["name"]].cloudfront_access_identity_path, null),
     "region" : try(aws_s3_bucket.quortex[b["name"]].region, null),
     "label" : b["label"]
+    "role_arn" : try(aws_iam_role.aws_eks_irsa[b["name"]].arn, null)
   } }
   description = "A map of bucket informations for each bucket provided in variables."
 }

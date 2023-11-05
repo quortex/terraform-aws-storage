@@ -71,6 +71,82 @@ resource "aws_iam_user_policy" "quortex_bucket_rw" {
 EOF
 }
 
+# --- Roles and policies associated to irsa ---
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "aws_eks_irsa" {
+  for_each           = var.enable_irsa ? local.buckets : []
+  name               = "${var.storage_prefix}-${each.key}-irsa"
+  assume_role_policy = data.aws_iam_policy_document.irsa_assume_role_policy[each.key].json
+}
+
+resource "aws_iam_policy" "aws_eks_irsa" {
+  for_each    = var.enable_irsa ? local.buckets : []
+  name        = "${var.storage_prefix}-${each.key}-irsa"
+  description = "The permissions required by service account to assume roles."
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid = "ListObjectsInBuckets",
+        Action = [
+          "s3:ListBucket"
+        ],
+        Effect = "Allow",
+        Resource = [
+          aws_s3_bucket.quortex[each.key].arn
+        ]
+      },
+      {
+        Sid = "AllObjectActions",
+        Action = [
+          "s3:*Object"
+        ],
+        Effect = "Allow",
+        Resource = [
+          "${aws_s3_bucket.quortex[each.key].arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "aws_eks_irsa" {
+  for_each   = var.enable_irsa ? local.buckets : []
+  role       = aws_iam_role.aws_eks_irsa[each.key].name
+  policy_arn = aws_iam_policy.aws_eks_irsa[each.key].arn
+}
+
+data "aws_iam_policy_document" "irsa_assume_role_policy" {
+  for_each = var.enable_irsa ? local.buckets : []
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/${var.cluster_oidc_issuer}"]
+    }
+
+    dynamic "condition" {
+      for_each = each.value.role.enabled ? [1] : []
+      content {
+        test     = "StringLike"
+        variable = "${var.cluster_oidc_issuer}:sub"
+        values   = [for a in each.value.role.service_accounts : "system:serviceaccount:${a.namespace}:${a.name}"]
+      }
+    }
+
+    dynamic "condition" {
+      for_each = each.value.role.enabled ? [1] : []
+      content {
+        test     = "StringLike"
+        variable = "${var.cluster_oidc_issuer}:aud"
+        values   = ["sts.amazonaws.com"]
+      }
+    }
+  }
+}
 
 # --- Buckets ---
 
