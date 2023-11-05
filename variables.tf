@@ -24,6 +24,12 @@ variable "buckets" {
         enabled         = bool
         expiration_days = number
       }))
+      role = optional(object({
+        service_accounts = list(object({
+          name      = string
+          namespace = string
+        }))
+      }))
     })
   )
   default     = []
@@ -64,4 +70,22 @@ variable "tags" {
   type        = map(any)
   description = "Tags to apply to resources. A list of key->value pairs."
   default     = {}
+}
+
+variable "cluster_oidc_issuer" {
+  type        = string
+  description = "The cluster OpenID Connect Issuer."
+  default     = ""
+}
+
+variable "enable_irsa" {
+  type        = bool
+  description = "Enable roles related to IRSA"
+  default     = false
+}
+
+variable "enable_user_access_key" {
+  type        = bool
+  description = "Enable user and access key"
+  default     = true
 }
