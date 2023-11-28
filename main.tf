@@ -75,13 +75,13 @@ EOF
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "aws_eks_irsa" {
-  for_each           = var.enable_irsa ? local.buckets : []
+  for_each           = local.buckets
   name               = "${var.storage_prefix}-${each.key}-irsa"
   assume_role_policy = data.aws_iam_policy_document.irsa_assume_role_policy[each.key].json
 }
 
 resource "aws_iam_policy" "aws_eks_irsa" {
-  for_each    = var.enable_irsa ? local.buckets : []
+  for_each    = local.buckets
   name        = "${var.storage_prefix}-${each.key}-irsa"
   description = "The permissions required by service account to assume roles."
 
@@ -113,13 +113,13 @@ resource "aws_iam_policy" "aws_eks_irsa" {
 }
 
 resource "aws_iam_role_policy_attachment" "aws_eks_irsa" {
-  for_each   = var.enable_irsa ? local.buckets : []
+  for_each   = local.buckets
   role       = aws_iam_role.aws_eks_irsa[each.key].name
   policy_arn = aws_iam_policy.aws_eks_irsa[each.key].arn
 }
 
 data "aws_iam_policy_document" "irsa_assume_role_policy" {
-  for_each = var.enable_irsa ? local.buckets : []
+  for_each = local.buckets
   statement {
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
