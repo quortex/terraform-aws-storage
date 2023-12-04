@@ -26,19 +26,20 @@ This module creates the following resources in AWS:
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.12 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 4.0.0 |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_buckets"></a> [buckets](#input\_buckets) | The list of buckets to create. | <pre>set(<br>    object({<br>      name  = string<br>      label = string<br>      tags  = map(string)<br>      expiration = optional(object({<br>        enabled         = bool<br>        expiration_days = number<br>      }))<br>    })<br>  )</pre> | `[]` | no |
+| <a name="input_buckets"></a> [buckets](#input\_buckets) | The list of buckets to create. | <pre>set(<br>    object({<br>      name  = string<br>      label = string<br>      tags  = map(string)<br>      expiration = optional(object({<br>        enabled         = bool<br>        expiration_days = number<br>      }))<br>      role = optional(object({<br>        enabled = bool<br>        service_accounts = list(object({<br>          name      = string<br>          namespace = string<br>        }))<br>      }))<br>    })<br>  )</pre> | `[]` | no |
 | <a name="input_storage_prefix"></a> [storage\_prefix](#input\_storage\_prefix) | A prefix for bucket names and service account id. Bucket names will be computed from this prefix and the provided buckets variable. | `string` | `"quortex"` | no |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | When deleting a bucket, this boolean option will delete all contained objects. If you try to delete a bucket that contains objects, Terraform will fail that run. | `bool` | `false` | no |
 | <a name="input_enable_bucket_encryption"></a> [enable\_bucket\_encryption](#input\_enable\_bucket\_encryption) | Should the created bucket encrypted using SSE-S3. | `bool` | `true` | no |
 | <a name="input_enable_cloudfront_oia"></a> [enable\_cloudfront\_oia](#input\_enable\_cloudfront\_oia) | Wether to enable cloudfront origin access identity for buckets. | `bool` | `false` | no |
 | <a name="input_sa_path"></a> [sa\_path](#input\_sa\_path) | The path to assign to bucket's service account. | `string` | `"/system/"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to resources. A list of key->value pairs. | `map(any)` | `{}` | no |
+| <a name="input_cluster_oidc_issuer"></a> [cluster\_oidc\_issuer](#input\_cluster\_oidc\_issuer) | The cluster OpenID Connect Issuer. | `string` | n/a | yes |
 
 ## Outputs
 
@@ -54,14 +55,18 @@ This module creates the following resources in AWS:
 |------|------|
 | [aws_cloudfront_origin_access_identity.quortex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_origin_access_identity) | resource |
 | [aws_iam_access_key.quortex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_access_key) | resource |
+| [aws_iam_policy.aws_eks_irsa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.aws_eks_irsa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy_attachment.aws_eks_irsa](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
 | [aws_iam_user.quortex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user) | resource |
 | [aws_iam_user_policy.quortex_bucket_rw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user_policy) | resource |
 | [aws_s3_bucket.quortex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
-| [aws_s3_bucket_acl.quortex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_acl) | resource |
 | [aws_s3_bucket_lifecycle_configuration.quortex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_lifecycle_configuration) | resource |
 | [aws_s3_bucket_policy.quortex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
 | [aws_s3_bucket_public_access_block.quortex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_public_access_block) | resource |
 | [aws_s3_bucket_server_side_encryption_configuration.quortex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_server_side_encryption_configuration) | resource |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_policy_document.irsa_assume_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.quortex](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 

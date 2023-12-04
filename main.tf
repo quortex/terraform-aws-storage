@@ -18,7 +18,7 @@
 
 # Service account
 resource "aws_iam_user" "quortex" {
-  count = length(local.buckets) > 0 ? 1 : 0
+  count = length(local.buckets) > 0 && var.enable_user_access_key ? 1 : 0
   name  = "${var.storage_prefix}-storage"
   path  = var.sa_path
 
@@ -33,12 +33,12 @@ locals {
 
 # Key
 resource "aws_iam_access_key" "quortex" {
-  count = length(local.buckets) > 0 ? 1 : 0
+  count = length(local.buckets) > 0 && var.enable_user_access_key ? 1 : 0
   user  = aws_iam_user.quortex[count.index].name
 }
 
 resource "aws_iam_user_policy" "quortex_bucket_rw" {
-  for_each = local.buckets
+  for_each = var.enable_user_access_key ? local.buckets : {}
   name     = "${var.storage_prefix}-${each.key}-rw"
   user     = aws_iam_user.quortex[0].name
 
@@ -71,6 +71,78 @@ resource "aws_iam_user_policy" "quortex_bucket_rw" {
 EOF
 }
 
+# --- Roles and policies associated to irsa ---
+data "aws_caller_identity" "current" {
+  count = var.enable_irsa ? 1 : 0
+}
+
+resource "aws_iam_role" "aws_eks_irsa" {
+  for_each           = var.enable_irsa ? { for b in var.buckets : b["name"] => b if b.role != null } : {}
+  name               = "${var.storage_prefix}-${each.key}-irsa"
+  assume_role_policy = data.aws_iam_policy_document.irsa_assume_role_policy[each.key].json
+}
+
+resource "aws_iam_policy" "aws_eks_irsa" {
+  for_each    = var.enable_irsa ? { for b in var.buckets : b["name"] => b if b.role != null } : {}
+  name        = "${var.storage_prefix}-${each.key}-irsa"
+  description = "The permissions required by service account to assume roles."
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid = "ListObjectsInBuckets",
+        Action = [
+          "s3:ListBucket"
+        ],
+        Effect = "Allow",
+        Resource = [
+          aws_s3_bucket.quortex[each.key].arn
+        ]
+      },
+      {
+        Sid = "AllObjectActions",
+        Action = [
+          "s3:*Object"
+        ],
+        Effect = "Allow",
+        Resource = [
+          "${aws_s3_bucket.quortex[each.key].arn}/*"
+        ]
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "aws_eks_irsa" {
+  for_each   = var.enable_irsa ? { for b in var.buckets : b["name"] => b if b.role != null } : {}
+  role       = aws_iam_role.aws_eks_irsa[each.key].name
+  policy_arn = aws_iam_policy.aws_eks_irsa[each.key].arn
+}
+
+data "aws_iam_policy_document" "irsa_assume_role_policy" {
+  for_each = var.enable_irsa ? { for b in var.buckets : b["name"] => b if b.role != null } : {}
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = ["arn:aws:iam::${data.aws_caller_identity.current[0].account_id}:oidc-provider/${var.cluster_oidc_issuer}"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "${var.cluster_oidc_issuer}:sub"
+      values   = [for a in each.value.role.service_accounts : "system:serviceaccount:${a.namespace}:${a.name}"]
+    }
+
+    condition {
+      test     = "StringLike"
+      variable = "${var.cluster_oidc_issuer}:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+  }
+}
 
 # --- Buckets ---
 
